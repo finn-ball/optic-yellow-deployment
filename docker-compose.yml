@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.9
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./config:/etc/traefik/config/:ro
+      - ./data/:/data/
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - proxy
+  optic-yellow:
+    image: <optic-yellow-container>
+    ports:
+      - "8080:8080"
+    command: [ "-headless", "-p", "8080", "-d", "" ]
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

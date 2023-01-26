@@ -1,0 +1,52 @@
+http:
+  routers:
+
+    wwwredirect:
+      rule: "HostRegexp(`{host:(www.+)}`)"
+      middlewares:
+        - "wwwredirect"
+      entryPoints:
+        - "websecure"
+      service: "noop@internal"
+      tls: {}
+
+    dashboard:
+      service: "api@internal"
+      middlewares:
+        - "user-auth"
+      entryPoints:
+        - "websecure"
+      rule: "Host(`example.com`)"
+      tls:
+        certResolver: "web"
+        domains:
+          - main: "example.com"
+          - sans:
+            - "www.example.com"
+
+    optic-yellow:
+      service: "optic-yellow"
+      entryPoints:
+        - "websecure"
+      rule: "Host(`optic-yellow.example.com`)"
+      tls: {}
+
+  middlewares:
+
+    user-auth:
+      basicAuth:
+        users:
+          - "admin:<some-pwd>"
+
+    wwwredirect:
+      redirectRegex:
+        regex: "^https?://www\\.(.+)"
+        replacement: "https://${1}"
+        permanent: true
+
+  services:
+
+    optic-yellow:
+      loadBalancer:
+        servers:
+        - url: "h2c://172.28.0.3:8080"
